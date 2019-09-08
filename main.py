@@ -20,7 +20,10 @@ parameters = {
     },
     'comb_cat_columns': ['aggresive_level', 'bid_limits', 'content', 'pop_level',
                          'strategy', 'time_period', 'keyword_1', 'keyword_2'],
-    'comb_num_columns': ['impression', 'rpo']
+    'comb_num_columns': ['impression', 'rpo'],
+    'pred_data': None,
+    'dashboard_filters': None,
+    'prediction_batch_size': 200000
 }
 
 def main(params):
@@ -28,7 +31,7 @@ def main(params):
     data = data_access.get_data_from_csv(params)
     data = data_manipulation.calculate_total_cost_revenue_conversion(data, params)
     if params['predict']:
-        pred_data, iters = prediction.combination_data_preparation(data, params)
+        params['pred_data'], params['dashboard_filters'], iters = prediction.combination_data_preparation(data, params)
     for y in params['output']:
         _path = params['output'][y]['model_path'] if params['output'][y][
                                                          'model_path'] is not None else constants.model_path
@@ -47,7 +50,10 @@ def main(params):
             h2o.save_model(model=params['output'][y]['best_model'], path=_path, force=True)
             h2o.shutdown(prompt=False)
         if params['predict']:
-            params['output'][y]['predicted'] = params.get_prediction(params['output'][y]['model_path'], iters, pred_data)
+            params['output'][y]['predicted'] = prediction.get_prediction(params['output'][y]['model_path'],
+                                                                         iters,
+                                                                         params['pred_data'],
+                                                                         params['prediction_batch_size'])
             data_access.pred_write_reader(_path, y, True, params)
         else:
             params['output'][y]['predicted'] = data_access.pred_write_reader(_path, y, False, [])
