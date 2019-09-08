@@ -8,6 +8,7 @@ import webbrowser
 import warnings
 
 def create_dashboard(params):
+    filters = params['filters']
     data_pred = pd.concat([params['pred_data'],
                            pd.DataFrame(zip(params['output']['reach'],
                                             params['output']['ctr'],
