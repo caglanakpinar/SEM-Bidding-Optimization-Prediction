@@ -1,4 +1,10 @@
-
+import h2o
+from h2o.estimators.glm import H2OGeneralizedLinearEstimator
+from h2o.estimators.gbm import H2OGradientBoostingEstimator
+from h2o.estimators.random_forest import H2ORandomForestEstimator
+from h2o.estimators.deeplearning import H2ODeepLearningEstimator
+from h2o.grid.grid_search import H2OGridSearch
+from h2o.estimators.stackedensemble import H2OStackedEnsembleEstimator
 
 class best_prediction_model:
     def __init__(self, data, search_criteria, hyper_p_gbm, hyper_p_drf, hyper_p_dnn, hyper_p_glm, y, X, split_ratio):

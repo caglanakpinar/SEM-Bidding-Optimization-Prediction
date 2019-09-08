@@ -1,11 +1,14 @@
 import pandas as pd
 import numpy as np
 import itertools
+import warnings
+import h2o
+import datetime
 
 def get_num_cols_quartiles(values):
     return [min(values), np.percentile(values, 0.25), np.percentile(values, 0.5), np.percentile(values, 0.75), max(values)]
 
-def combination_data_preparation(pred_data, paramters):
+def combination_data_preparation(data, paramters):
     comb = []
     for i in paramters['comb_cat_columns']:
         comb.append(list(data[i].unique()))
@@ -14,8 +17,8 @@ def combination_data_preparation(pred_data, paramters):
     combinations = list(itertools.product(*comb))
     counter = 0
     for i in paramters['comb_cat_columns'] + paramters['comb_num_columns']:
-        pred_data = pred_data.rename(columns={counter: i})
-    return pred_data
+        pred_data = data.rename(columns={counter: i})
+    return data
 
 def get_prediction(model_path, iters, data):
     h2o.init(nthreads=-1)

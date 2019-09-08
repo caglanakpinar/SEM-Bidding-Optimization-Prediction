@@ -1,3 +1,5 @@
+import numpy as np
+
 search_criteria = {'strategy': "RandomDiscrete", 'max_models': 50}
 hyper_p_gbm = {'sample_rate': [0.7, 0.8, 0.9],
                 'ntrees': list(np.arange(100, 1000, 100)),
@@ -23,4 +25,8 @@ hyper_p_glm = hyper_params = {'lambda': [0.5, 0.5, 1.0, 1.2, 1.5],
                              }
 split_ratio = 0.8
 
-model_features={'CPC': }
+model_features = {'CPC': {'num': None , 'cat': None},
+                  'CTR': {'num': None , 'cat': None},
+                  'reach': {'num': None , 'cat': None}
+                  }
+model_save_path = './'

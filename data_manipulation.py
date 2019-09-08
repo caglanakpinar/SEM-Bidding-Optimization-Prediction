@@ -11,3 +11,11 @@ def calculate_total_cost_revenue_conversion(data, params):
         data['total_revenue'] = data['rpo'] * data['conversion']
         data['cost_ratio'] = data['total_cost'] / data['total_revenue']
     return data
+
+def converting_numeric_encoder(df, features):
+    feature_set = []
+    for col in features['cat']:
+        _features = pd.get_dummies(df[col])
+        df = pd.concat([df, _features], axis=1)
+        feature_set += list(_features.columns)
+    return df[feature_set + features['num']]
