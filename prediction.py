@@ -20,6 +20,7 @@ def combination_data_preparation(data, paramters):
     counter = 0
     for i in paramters['comb_cat_columns'] + paramters['comb_num_columns']:
         pred_data = pred_data.rename(columns={counter: i})
+        counter += 1
     iters = int(len(comb) / paramters['prediction_batch_size'])
     return pred_data, filters, iters
 
