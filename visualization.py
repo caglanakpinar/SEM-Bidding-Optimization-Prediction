@@ -8,12 +8,15 @@ import webbrowser
 import warnings
 
 def create_dashboard(params):
-    filters = params['filters']
+    filters = params['dashboard_filters']
+    print(len(params['output']['reach']['predicted']),
+          len(params['output']['ctr']['predicted']), len(params['output']['cpc']['predicted']))
     data_pred = pd.concat([params['pred_data'],
-                           pd.DataFrame(zip(params['output']['reach'],
-                                            params['output']['ctr'],
-                                            params['output']['cpc']))], axis=1).rename(
-        columns={0: 'reach', 1: 'ctr', 2: 'cpc'})
+                           pd.DataFrame(zip(params['output']['reach']['predicted'][0:len(params['pred_data'])],
+                                            params['output']['ctr']['predicted'][0:len(params['pred_data'])],
+                                            params['output']['cpc']['predicted'][0:len(params['pred_data'])]
+                                            ))], axis=1).rename(columns={0: 'reach', 1: 'ctr', 2: 'cpc'}).fillna(0)
+    print(len(data_pred))
     data_pred['conversion'] = data_pred['reach'] * data_pred['ctr']
     data_pred['total_cost'] = data_pred['cpc'] * data_pred['conversion']
     data_pred['total_revenue'] = data_pred['rpo'] * data_pred['conversion']

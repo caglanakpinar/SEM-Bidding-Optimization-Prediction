@@ -29,4 +29,4 @@ model_features = {'CPC': {'num': None , 'cat': None},
                   'CTR': {'num': None , 'cat': None},
                   'reach': {'num': None , 'cat': None}
                   }
-model_save_path = './'
+model_save_path = './predictions/'

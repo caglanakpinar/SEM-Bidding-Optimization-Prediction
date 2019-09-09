@@ -1,5 +1,4 @@
 import h2o
-
 import data_access
 import data_manipulation
 import prediction
@@ -8,12 +7,13 @@ import visualization
 import constants
 
 parameters = {
-    'model_train': True,
-    'predict': True,
+    'path': None,
+    'model_train': False,
+    'predict': False,
     'output': {
-        'CPC': {'model_path': None, 'predicted': None,
+        'cpc': {'model_path': None, 'predicted': None,
                 'model_features': {'num': None , 'cat': None}, 'best_model': None},
-        'CTR': {'model_path': None, 'predicted': None,
+        'ctr': {'model_path': None, 'predicted': None,
                 'model_features': {'num': None , 'cat': None}, 'best_model': None},
         'reach': {'model_path': None, 'predicted': None,
                   'model_features': {'num': None , 'cat': None}, 'best_model': None}
@@ -24,17 +24,17 @@ parameters = {
     'pred_data': None,
     'dashboard_filters': None,
     'prediction_batch_size': 200000
+
 }
 
 def main(params):
     print("let`s get started!")
     data = data_access.get_data_from_csv(params)
-    data = data_manipulation.calculate_total_cost_revenue_conversion(data, params)
-    if params['predict']:
-        params['pred_data'], params['dashboard_filters'], iters = prediction.combination_data_preparation(data, params)
+    data = data_manipulation.calculate_total_cost_revenue_conversion(data)
+    params['pred_data'], params['dashboard_filters'], iters = prediction.combination_data_preparation(data, params)
     for y in params['output']:
         _path = params['output'][y]['model_path'] if params['output'][y][
-                                                         'model_path'] is not None else constants.model_path
+                                                         'model_path'] is not None else constants.model_save_path
 
         if params['model_train']:
 

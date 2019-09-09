@@ -16,10 +16,10 @@ def combination_data_preparation(data, paramters):
         filters[i] = list(data[i].unique()) + ['ALL']
     for i in paramters['comb_num_columns']:
         comb.append(get_num_cols_quartiles(list(data[i])))
-    combinations = list(itertools.product(*comb))
+    pred_data = pd.DataFrame(list(itertools.product(*comb)))
     counter = 0
     for i in paramters['comb_cat_columns'] + paramters['comb_num_columns']:
-        pred_data = data.rename(columns={counter: i})
+        pred_data = pred_data.rename(columns={counter: i})
     iters = int(len(comb) / paramters['prediction_batch_size'])
     return pred_data, filters, iters
 

@@ -9,9 +9,8 @@ def get_data_from_csv(parameters):
         data = pd.read_csv("sem_bidding.csv")
     return data
 
-
-def pred_write_reader(fileName, y, isWriting, params):
-    file_dir = './' + fileName + y +'.pkl'
+def pred_write_reader(path, y, isWriting, params):
+    file_dir = path + y +'.pkl'
 
     if isWriting:
         if os.path.exists(file_dir):
