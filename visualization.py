@@ -7,24 +7,50 @@ import numpy as np
 import webbrowser
 import warnings
 
-def create_dashboard(params):
-    filters = params['dashboard_filters']
-    print(len(params['output']['reach']['predicted']),
-          len(params['output']['ctr']['predicted']), len(params['output']['cpc']['predicted']))
+def calcualtion_best_sem_options(params):
     data_pred = pd.concat([params['pred_data'],
                            pd.DataFrame(zip(params['output']['reach']['predicted'][0:len(params['pred_data'])],
                                             params['output']['ctr']['predicted'][0:len(params['pred_data'])],
                                             params['output']['cpc']['predicted'][0:len(params['pred_data'])]
                                             ))], axis=1).rename(columns={0: 'reach', 1: 'ctr', 2: 'cpc'}).fillna(0)
-    print(len(data_pred))
     data_pred['conversion'] = data_pred['reach'] * data_pred['ctr']
     data_pred['total_cost'] = data_pred['cpc'] * data_pred['conversion']
     data_pred['total_revenue'] = data_pred['rpo'] * data_pred['conversion']
+    data_pred['cost_ratio'] = data_pred['total_cost'] / data_pred['total_revenue']
+    data_pred = data_pred[(data_pred['total_cost'] >= 0) & (data_pred['total_revenue'] >= 0)]
+    revenue_95_quartile = np.percentile(list(data_pred['total_revenue']), 0.75)
+    solution = data_pred[data_pred['total_revenue'] >= revenue_95_quartile
+                                ].sort_values(by='cost_ratio', ascending=True).to_dict('results')[0]
+    impression_level = str(round(solution['impression'] / max(data_pred['impression']), 1)) + "%"
+    max_popularity = max(list(map(lambda x: int(x.split("_")[2]), list(data_pred['pop_level'].unique()))))
+    solution_popularity = int(solution['pop_level'].split("_")[2])
+    popularity_prec = str(round(solution_popularity / max_popularity, 1)) + "%"
+    if int(solution['bid_limits'].split("_")[2]) == 0:
+        solution_bid =  " No need to run bidding limit"
+    else:
+        solution_bid = " It is better to run this campaign with maximum bid of " + solution['bid_limits'].split("_")[2]
+    words = """ Best solution should shape with content of '{}' with using word of '{}' and '{}'.
+                By creating a campaign with the content we also assume that we will get {} impression level and 
+                popularity level of {}. It is better to use the google bidding strategy of '{}'.
+                If it is possible it is better to run this campaign at {}. {}. 
+    """.format(solution['content'], solution['keyword_1'],
+               solution['keyword_2'], impression_level, popularity_prec,
+               solution['strategy'], solution['time_period'], solution_bid)
+    print(words)
+    params['pred_data'] = data_pred
+    params['solution'] = words
+    return params
+
+def create_dashboard(params):
+    data_pred = params['pred_data']
+    filters = params['dashboard_filters']
+    solution = params['solution']
 
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
     app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
     app.layout = html.Div([
         html.Div('Seach Engine Marketing Total Cost & Total Revenue'),
+        html.Div(solution),
         html.Div([
             html.Div('aggresive_level', style={'width': '20%', 'float': 'left', 'display': 'inline-block'}),
 

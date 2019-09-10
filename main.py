@@ -6,6 +6,7 @@ import model_train
 import visualization
 import constants
 
+# parameters shapes how we process CPC, CTR and reach prediction
 parameters = {
     'path': None,
     'model_train': False,
@@ -23,21 +24,25 @@ parameters = {
     'comb_num_columns': ['impression', 'rpo'],
     'pred_data': None,
     'dashboard_filters': None,
-    'prediction_batch_size': 200000
+    'prediction_batch_size': 200000,
+    'solution': None
 
 }
 
 def main(params):
     print("let`s get started!")
+    print("trained models are detected!") if not params['model_train'] else print("let`s train CTR, CPC and reach")
+    print("predicted values are detected!") if not params['predict'] else print("let`s predict")
+
     data = data_access.get_data_from_csv(params)
     data = data_manipulation.calculate_total_cost_revenue_conversion(data)
     params['pred_data'], params['dashboard_filters'], iters = prediction.combination_data_preparation(data, params)
+
     for y in params['output']:
         _path = params['output'][y]['model_path'] if params['output'][y][
                                                          'model_path'] is not None else constants.model_save_path
 
         if params['model_train']:
-
             X = constants.model_features[y] if y['model_features']['X']['numeric'] is None else y['model_features']['X']
             _data = data_manipulation.converting_numeric_encoder(data, X)
             model_train.best_prediction_model(_data, constants.search_criteria,
@@ -49,6 +54,7 @@ def main(params):
             params['output'][y]['best_model'] = model_train.best_prediction_model.best_model
             h2o.save_model(model=params['output'][y]['best_model'], path=_path, force=True)
             h2o.shutdown(prompt=False)
+
         if params['predict']:
             params['output'][y]['predicted'] = prediction.get_prediction(params['output'][y]['model_path'],
                                                                          iters,
@@ -60,4 +66,5 @@ def main(params):
 
 if __name__ == '__main__':
   main(parameters)
-  visualization.create_dashboard(parameters)
+  parameters = visualization.calcualtion_best_sem_options(parameters)
+  visualization.create_dashboard(parameters) # this is the dashboard visualize the outputs
