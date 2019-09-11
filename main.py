@@ -13,17 +13,29 @@ parameters = {
     'path': None,
     # this allows us the train our model again. If no need assign False
     # training process takes about 1 hour. Make sure have 1.7gb free ram before train model. It also works on h20.
-    'model_train': False,
+    'model_train': True,
     # This also takes half an hour. It runs the model with combined features in order to find the optimum solutions
     'predict': False,
     # output of the project assigning on output dictionary.
     'output': {
         'cpc': {'model_path': None, 'predicted': None,
-                'model_features': {'num': None , 'cat': None}, 'best_model': None},
+                'model_features': {'num': ['impression', 'rpo'],
+                                   'cat': ['aggresive_level', 'bid_limits', 'content', 'pop_level',
+                                           'strategy', 'time_period', 'keyword_1', 'keyword_2']
+                                   },
+                'best_model': None},
         'ctr': {'model_path': None, 'predicted': None,
-                'model_features': {'num': None , 'cat': None}, 'best_model': None},
+                'model_features': {'num': ['cpc', 'impression', 'rpo'], # for ctr cpc is also adding to feature set
+                                   'cat': ['aggresive_level', 'bid_limits', 'content', 'pop_level',
+                                           'strategy', 'time_period', 'keyword_1', 'keyword_2']
+                                   },
+                'best_model': None},
         'reach': {'model_path': None, 'predicted': None,
-                  'model_features': {'num': None , 'cat': None}, 'best_model': None}
+                  'model_features': {'num': ['impression', 'rpo'],
+                                     'cat': ['aggresive_level', 'bid_limits', 'content', 'pop_level', 'strategy',
+                                             'time_period', 'keyword_1', 'keyword_2']
+                                     },
+                  'best_model': None}
     },
     # These are the categorical features of our model
     'comb_cat_columns': ['aggresive_level', 'bid_limits', 'content', 'pop_level',
@@ -58,21 +70,25 @@ def main(params):
         # if we assign model path is gathers model from there. Othervise path is assigned in constans.
         _path = params['output'][y]['model_path'] if params['output'][y][
                                                          'model_path'] is not None else constants.model_save_path
-
         if params['model_train']:
             # inputs for training process
-            X = constants.model_features[y] if y['model_features']['X']['numeric'] is None else y['model_features']['X']
+            if params['output'][y]['model_features']['num'] is None:
+                X_decoded = constants.model_features[y]
+            else:
+                X_decoded = params['output'][y]['model_features']
             # this is for one-hot encoding for categorical features.
-            _data = data_manipulation.converting_numeric_encoder(data, X)
+            _data, X_encoded = data_manipulation.converting_numeric_encoder(data, X_decoded, y)
             # each learning process assign for GGM, DRF, DNN, GLM machine Learning models.
             # At the end H2o allows us to find the best model by using stack Ensemble model
-            model_train.best_prediction_model(_data, constants.search_criteria,
-                                              constants.hyper_p_gbm, constants.hyper_p_drf,
-                                              constants.hyper_p_dnn,constants.hyper_p_glm
-                                              )
-            model_train.best_prediction_model.compute_train_process()
-            model_train.best_prediction_model.compute_best_model()
-            params['output'][y]['best_model'] = model_train.best_prediction_model.best_model
+            _model = model_train.best_prediction_model(_data, constants.search_criteria,
+                                                       constants.hyper_p_gbm, constants.hyper_p_drf,
+                                                       constants.hyper_p_dnn,constants.hyper_p_glm,
+                                                       y, X_encoded,
+                                                       constants.split_ratio
+                                                      )
+            _model.compute_train_process()
+            _model.compute_best_model()
+            params['output'][y]['best_model'] = _model.best_model
             h2o.save_model(model=params['output'][y]['best_model'], path=_path, force=True)
             # shot down h2o instance. This project it runs on each available cores on your server or local comp.
             h2o.shutdown(prompt=False)
@@ -92,4 +108,4 @@ def main(params):
 if __name__ == '__main__':
   main(parameters)
   parameters = visualization.calcualtion_best_sem_options(parameters)
-  visualization.create_dashboard(parameters) # this is the dashboard visualize the outputs
+  visualization.create_dashboard(parameters) # this is for dashboard visualize the outputs
